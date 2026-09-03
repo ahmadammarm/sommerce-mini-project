@@ -34,8 +34,8 @@ func LoadEnv() *EnvConfig {
 
 // getEnvOrPanic ensures critical configuration is present (Fail-Fast)
 func getEnvOrPanic(key string) string {
-	val := os.Getenv(key)
-	if val == "" {
+	val, exists := os.LookupEnv(key)
+	if !exists {
 		panic("CRITICAL: Missing required environment variable: " + key)
 	}
 	return val

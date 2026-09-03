@@ -1,11 +1,19 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/ahmadammarm/sommerce-mini-project/config"
+)
 
 func main() {
-    var hello string
+	fmt.Println("Loading environment variables...")
+	env := config.LoadEnv()
 
-    hello = "Hello World"
+	fmt.Println("Connecting to the database...")
+	db := config.InitDatabase(env)
 
-    fmt.Println(hello)
+	if db != nil {
+		fmt.Println("SUCCESS: Database connection and pool established successfully!")
+	}
 }
