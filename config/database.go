@@ -4,6 +4,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ahmadammarm/sommerce-mini-project/internal/alamat"
+	"github.com/ahmadammarm/sommerce-mini-project/internal/category"
+	"github.com/ahmadammarm/sommerce-mini-project/internal/produk"
+	"github.com/ahmadammarm/sommerce-mini-project/internal/toko"
+	"github.com/ahmadammarm/sommerce-mini-project/internal/transaction"
+	"github.com/ahmadammarm/sommerce-mini-project/internal/user"
+
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -46,9 +53,17 @@ func InitDatabase(env *EnvConfig) *gorm.DB {
 	// ---------------------------------------------------------
 	// AUTO MIGRATE
 	// ---------------------------------------------------------
-	// TODO: Once we create the models in the `domain` package, we will inject them here.
-	// Example: db.AutoMigrate(&domain.User{}, &domain.Toko{}, ...)
-	err = db.AutoMigrate()
+	err = db.AutoMigrate(
+		&user.User{},
+		&alamat.Alamat{},
+		&toko.Toko{},
+		&category.Category{},
+		&produk.Produk{},
+		&produk.FotoProduk{},
+		&produk.LogProduk{},
+		&transaction.Trx{},
+		&transaction.DetailTrx{},
+	)
 	if err != nil {
 		panic("Failed to migrate database: " + err.Error())
 	}
