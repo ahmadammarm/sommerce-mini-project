@@ -2,9 +2,6 @@ package toko
 
 import (
 	"time"
-
-	"github.com/lucsky/cuid"
-	"gorm.io/gorm"
 )
 
 type Toko struct {
@@ -14,9 +11,4 @@ type Toko struct {
 	UrlFoto   string    `gorm:"column:url_foto;type:varchar(255)"`
 	UpdatedAt time.Time `gorm:"column:updated_at;autoUpdateTime"`
 	CreatedAt time.Time `gorm:"column:created_at;autoCreateTime"`
-}
-
-func (t *Toko) BeforeCreate(tx *gorm.DB) (err error) {
-	t.ID = cuid.New()
-	return
 }

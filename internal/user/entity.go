@@ -2,9 +2,6 @@ package user
 
 import (
 	"time"
-
-	"github.com/lucsky/cuid"
-	"gorm.io/gorm"
 )
 
 type User struct {
@@ -22,10 +19,4 @@ type User struct {
 	IsAdmin      bool      `gorm:"column:isAdmin;type:boolean;default:false"`
 	UpdatedAt    time.Time `gorm:"column:updated_at;autoUpdateTime"`
 	CreatedAt    time.Time `gorm:"column:created_at;autoCreateTime"`
-}
-
-// BeforeCreate automatically generates a CUID for the ID before inserting into the database
-func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
-	u.ID = cuid.New()
-	return
 }

@@ -2,9 +2,6 @@ package transaction
 
 import (
 	"time"
-
-	"github.com/lucsky/cuid"
-	"gorm.io/gorm"
 )
 
 type Trx struct {
@@ -18,11 +15,6 @@ type Trx struct {
 	CreatedAt        time.Time `gorm:"column:created_at;autoCreateTime"`
 }
 
-func (t *Trx) BeforeCreate(tx *gorm.DB) (err error) {
-	t.ID = cuid.New()
-	return
-}
-
 type DetailTrx struct {
 	ID          string    `gorm:"primaryKey;type:varchar(50);column:id"`
 	IdTrx       string    `gorm:"column:id_trx;type:varchar(50);not null"`
@@ -32,9 +24,4 @@ type DetailTrx struct {
 	HargaTotal  int       `gorm:"column:harga_total;type:int"`
 	UpdatedAt   time.Time `gorm:"column:updated_at;autoUpdateTime"`
 	CreatedAt   time.Time `gorm:"column:created_at;autoCreateTime"`
-}
-
-func (d *DetailTrx) BeforeCreate(tx *gorm.DB) (err error) {
-	d.ID = cuid.New()
-	return
 }
