@@ -5,6 +5,8 @@ type CreateAlamatRequest struct {
 	NamaPenerima string `json:"nama_penerima" validate:"required"`
 	NoTelp       string `json:"no_telp" validate:"required"`
 	DetailAlamat string `json:"detail_alamat" validate:"required"`
+	IdProvinsi   string `json:"id_provinsi" validate:"required"`
+	IdKota       string `json:"id_kota" validate:"required"`
 }
 
 type UpdateAlamatRequest struct {
@@ -12,6 +14,8 @@ type UpdateAlamatRequest struct {
 	NamaPenerima string `json:"nama_penerima"`
 	NoTelp       string `json:"no_telp"`
 	DetailAlamat string `json:"detail_alamat"`
+	IdProvinsi   string `json:"id_provinsi"`
+	IdKota       string `json:"id_kota"`
 }
 
 type AlamatResponse struct {
@@ -20,4 +24,6 @@ type AlamatResponse struct {
 	NamaPenerima string `json:"nama_penerima"`
 	NoTelp       string `json:"no_telp"`
 	DetailAlamat string `json:"detail_alamat"`
+	IdProvinsi   string `json:"id_provinsi"`
+	IdKota       string `json:"id_kota"`
 }
