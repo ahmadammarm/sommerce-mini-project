@@ -35,3 +35,14 @@ type UserResponse struct {
 	IsAdmin      bool      `json:"is_admin"`
 	CreatedAt    time.Time `json:"created_at"`
 }
+
+type UpdateProfileRequest struct {
+	Nama         string `json:"nama" validate:"omitempty,min=3"`
+	NoTelp       string `json:"notelp"`
+	TanggalLahir string `json:"tanggal_lahir"` // Format: YYYY-MM-DD
+	JenisKelamin string `json:"jenis_kelamin" validate:"omitempty,oneof=Laki-laki Perempuan"`
+	Tentang      string `json:"tentang"`
+	Pekerjaan    string `json:"pekerjaan"`
+	IdProvinsi   string `json:"id_provinsi"`
+	IdKota       string `json:"id_kota"`
+}

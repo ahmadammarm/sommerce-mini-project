@@ -15,6 +15,8 @@ import (
 type UserService interface {
 	Register(ctx context.Context, req *RegisterRequest) (*UserResponse, error)
 	Login(ctx context.Context, req *LoginRequest) (string, error)
+	GetMyProfile(ctx context.Context, userID string) (*UserResponse, error)
+	UpdateProfile(ctx context.Context, userID string, req *UpdateProfileRequest) (*UserResponse, error)
 }
 
 type userService struct {
@@ -102,52 +104,124 @@ func (s *userService) Register(ctx context.Context, req *RegisterRequest) (*User
 		IdUser: userID,
 	}
 	if err := s.tokoRepo.Create(ctx, tokoBaru); err != nil {
-		// In a fully robust system, you might want to rollback the user here or use a DB transaction
-		// However, doing external API calls inside a DB transaction is an anti-pattern.
-		// Doing it here sequentially is the acceptable Clean Architecture tradeoff.
 		return nil, err
 	}
 
 	// 7. Return safe response mapping (excluding password)
-	return &UserResponse{
-		ID:           user.ID,
-		Nama:         user.Nama,
-		Email:        user.Email,
-		NoTelp:       user.NoTelp,
-		TanggalLahir: user.TanggalLahir,
-		JenisKelamin: user.JenisKelamin,
-		Tentang:      user.Tentang,
-		Pekerjaan:    user.Pekerjaan,
-		IdProvinsi:   user.IdProvinsi,
-		IdKota:       user.IdKota,
-		IsAdmin:      user.IsAdmin,
-		CreatedAt:    user.CreatedAt,
-	}, nil
+	return mapToUserResponse(user), nil
 }
 
 // Login validates credentials and issues a JWT token
 func (s *userService) Login(ctx context.Context, req *LoginRequest) (string, error) {
-	// 1. Validate request structure
 	if err := s.validator.Struct(req); err != nil {
 		return "", err
 	}
 
-	// 2. Fetch User by Email
 	user, err := s.userRepo.FindByEmail(ctx, req.Email)
 	if err != nil {
 		return "", err
 	}
-	// Use a generic error message for both cases to prevent user enumeration attacks
+
 	genericAuthErr := errors.New("invalid email or password")
 	if user == nil {
 		return "", genericAuthErr
 	}
 
-	// 3. Verify bcrypt hash
 	if !utils.CheckPasswordHash(req.KataSandi, user.KataSandi) {
 		return "", genericAuthErr
 	}
 
-	// 4. Generate and return JWT Token
 	return utils.GenerateToken(user.ID, user.IsAdmin)
+}
+
+// GetMyProfile fetches the currently logged-in user's data
+func (s *userService) GetMyProfile(ctx context.Context, userID string) (*UserResponse, error) {
+	user, err := s.userRepo.FindByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, errors.New("user not found")
+	}
+
+	return mapToUserResponse(user), nil
+}
+
+// UpdateProfile allows a user to update their personal information
+func (s *userService) UpdateProfile(ctx context.Context, userID string, req *UpdateProfileRequest) (*UserResponse, error) {
+	if err := s.validator.Struct(req); err != nil {
+		return nil, err
+	}
+
+	// If region is being updated, validate with Emsifa
+	if req.IdProvinsi != "" && req.IdKota != "" {
+		validKota, err := s.wilayahAPI.IsValidKota(ctx, req.IdProvinsi, req.IdKota)
+		if err != nil {
+			return nil, errors.New("failed to connect to regional verification server")
+		}
+		if !validKota {
+			return nil, errors.New("invalid province or city ID")
+		}
+	}
+
+	user, err := s.userRepo.FindByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, errors.New("user not found")
+	}
+
+	// Update fields if provided
+	if req.Nama != "" {
+		user.Nama = req.Nama
+	}
+	if req.NoTelp != "" {
+		user.NoTelp = req.NoTelp
+	}
+	if req.TanggalLahir != "" {
+		parsedDate, err := time.Parse("2006-01-02", req.TanggalLahir)
+		if err == nil {
+			user.TanggalLahir = parsedDate
+		}
+	}
+	if req.JenisKelamin != "" {
+		user.JenisKelamin = req.JenisKelamin
+	}
+	if req.Tentang != "" {
+		user.Tentang = req.Tentang
+	}
+	if req.Pekerjaan != "" {
+		user.Pekerjaan = req.Pekerjaan
+	}
+	if req.IdProvinsi != "" {
+		user.IdProvinsi = req.IdProvinsi
+	}
+	if req.IdKota != "" {
+		user.IdKota = req.IdKota
+	}
+
+	if err := s.userRepo.Update(ctx, user); err != nil {
+		return nil, err
+	}
+
+	return mapToUserResponse(user), nil
+}
+
+// mapToUserResponse is a private helper to map the DB entity to the API DTO
+func mapToUserResponse(u *User) *UserResponse {
+	return &UserResponse{
+		ID:           u.ID,
+		Nama:         u.Nama,
+		Email:        u.Email,
+		NoTelp:       u.NoTelp,
+		TanggalLahir: u.TanggalLahir,
+		JenisKelamin: u.JenisKelamin,
+		Tentang:      u.Tentang,
+		Pekerjaan:    u.Pekerjaan,
+		IdProvinsi:   u.IdProvinsi,
+		IdKota:       u.IdKota,
+		IsAdmin:      u.IsAdmin,
+		CreatedAt:    u.CreatedAt,
+	}
 }
