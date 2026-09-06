@@ -29,3 +29,13 @@ type ProdukResponse struct {
 	IdToko        string   `json:"id_toko"`
 	Photos        []string `json:"photos"`
 }
+
+type UpdateProdukRequest struct {
+	NamaProduk    string   `json:"nama_produk"`
+	HargaReseller int      `json:"harga_reseller"`
+	HargaKonsumen int      `json:"harga_konsumen"`
+	Stok          int      `json:"stok"`
+	Deskripsi     string   `json:"deskripsi"`
+	IdCategory    string   `json:"id_category"`
+	Photos        []string `json:"photos"`
+}
