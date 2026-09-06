@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"github.com/ahmadammarm/sommerce-mini-project/pkg/emsifa"
-	"github.com/ahmadammarm/sommerce-mini-project/utils"
+	"github.com/ahmadammarm/sommerce-mini-project/pkg/uid"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -20,11 +20,11 @@ type AlamatService interface {
 type alamatService struct {
 	repo       AlamatRepository
 	wilayahAPI emsifa.WilayahProvider
-	idGen      utils.IDGenerator
+	idGen      uid.IDGenerator
 	validator  *validator.Validate
 }
 
-func NewAlamatService(r AlamatRepository, wp emsifa.WilayahProvider, idg utils.IDGenerator, v *validator.Validate) AlamatService {
+func NewAlamatService(r AlamatRepository, wp emsifa.WilayahProvider, idg uid.IDGenerator, v *validator.Validate) AlamatService {
 	return &alamatService{repo: r, wilayahAPI: wp, idGen: idg, validator: v}
 }
 

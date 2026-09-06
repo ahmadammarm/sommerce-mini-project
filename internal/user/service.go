@@ -7,6 +7,8 @@ import (
 
 	"github.com/ahmadammarm/sommerce-mini-project/internal/toko"
 	"github.com/ahmadammarm/sommerce-mini-project/pkg/emsifa"
+	"github.com/ahmadammarm/sommerce-mini-project/pkg/hash"
+	"github.com/ahmadammarm/sommerce-mini-project/pkg/uid"
 	"github.com/ahmadammarm/sommerce-mini-project/utils"
 	"github.com/go-playground/validator/v10"
 )
@@ -23,12 +25,12 @@ type userService struct {
 	userRepo   UserRepository
 	tokoRepo   toko.TokoRepository
 	wilayahAPI emsifa.WilayahProvider
-	idGen      utils.IDGenerator
+	idGen      uid.IDGenerator
 	validator  *validator.Validate
 }
 
 // NewUserService is the constructor for Dependency Injection
-func NewUserService(ur UserRepository, tr toko.TokoRepository, wp emsifa.WilayahProvider, idg utils.IDGenerator, v *validator.Validate) UserService {
+func NewUserService(ur UserRepository, tr toko.TokoRepository, wp emsifa.WilayahProvider, idg uid.IDGenerator, v *validator.Validate) UserService {
 	return &userService{
 		userRepo:   ur,
 		tokoRepo:   tr,
@@ -72,7 +74,7 @@ func (s *userService) Register(ctx context.Context, req *RegisterRequest) (*User
 	}
 
 	// 4. Hash password and generate primary keys
-	hashedPassword, err := utils.HashPassword(req.KataSandi)
+	hashedPassword, err := hash.HashPassword(req.KataSandi)
 	if err != nil {
 		return nil, errors.New("failed to process password")
 	}
@@ -127,7 +129,7 @@ func (s *userService) Login(ctx context.Context, req *LoginRequest) (string, err
 		return "", genericAuthErr
 	}
 
-	if !utils.CheckPasswordHash(req.KataSandi, user.KataSandi) {
+	if !hash.CheckPasswordHash(req.KataSandi, user.KataSandi) {
 		return "", genericAuthErr
 	}
 

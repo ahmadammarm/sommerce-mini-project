@@ -1,4 +1,4 @@
-package utils
+package response
 
 // WebResponse is a standard wrapper for all API responses
 type WebResponse struct {
