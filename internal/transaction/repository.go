@@ -105,6 +105,6 @@ func (r *transactionRepository) FindByUserID(ctx context.Context, userID string)
 
 func (r *transactionRepository) FindDetailsByTrxID(ctx context.Context, trxID string) ([]DetailTrx, error) {
 	var details []DetailTrx
-	err := r.db.WithContext(ctx).Where("id_trx = ?", trxID).Find(&details).Error
+	err := r.db.WithContext(ctx).Where("id_trx = ?", trxID).Preload("LogProduk").Find(&details).Error
 	return details, err
 }

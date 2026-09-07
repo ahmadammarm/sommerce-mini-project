@@ -14,7 +14,7 @@ import (
 type TransactionService interface {
 	Checkout(ctx context.Context, userID, idempotencyKey string, req *CheckoutRequest) (*TransactionResponse, error)
 	GetMyTransactions(ctx context.Context, userID string) ([]TransactionResponse, error)
-	GetTransactionDetail(ctx context.Context, userID, trxID string) (*TransactionResponse, error)
+	GetTransactionDetail(ctx context.Context, userID, trxID string) (*TransactionDetailResponse, error)
 }
 
 type transactionService struct {
@@ -78,7 +78,7 @@ func (s *transactionService) GetMyTransactions(ctx context.Context, userID strin
 	return res, nil
 }
 
-func (s *transactionService) GetTransactionDetail(ctx context.Context, userID, trxID string) (*TransactionResponse, error) {
+func (s *transactionService) GetTransactionDetail(ctx context.Context, userID, trxID string) (*TransactionDetailResponse, error) {
 	trxs, err := s.trxRepo.FindByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -96,7 +96,34 @@ func (s *transactionService) GetTransactionDetail(ctx context.Context, userID, t
 		return nil, errors.New("transaction not found or unauthorized")
 	}
 
-	return mapToTransactionResponse(target), nil
+	details, err := s.trxRepo.FindDetailsByTrxID(ctx, trxID)
+	if err != nil {
+		return nil, err
+	}
+
+	var detailsResp []DetailTransactionResponse
+	for _, d := range details {
+		detailsResp = append(detailsResp, DetailTransactionResponse{
+			ID:         d.ID,
+			Kuantitas:  d.Kuantitas,
+			HargaTotal: d.HargaTotal,
+			Produk: LogProdukResponse{
+				ID:            d.LogProduk.ID,
+				IdProduk:      d.LogProduk.IdProduk,
+				NamaProduk:    d.LogProduk.NamaProduk,
+				HargaReseller: d.LogProduk.HargaReseller,
+				HargaKonsumen: d.LogProduk.HargaKonsumen,
+				Deskripsi:     d.LogProduk.Deskripsi,
+			},
+		})
+	}
+
+	resp := &TransactionDetailResponse{
+		TransactionResponse: *mapToTransactionResponse(target),
+		Details:             detailsResp,
+	}
+
+	return resp, nil
 }
 
 func mapToTransactionResponse(t *Trx) *TransactionResponse {

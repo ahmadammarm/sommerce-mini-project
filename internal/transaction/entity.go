@@ -2,6 +2,8 @@ package transaction
 
 import (
 	"time"
+
+	"github.com/ahmadammarm/sommerce-mini-project/internal/produk"
 )
 
 type Trx struct {
@@ -17,12 +19,13 @@ type Trx struct {
 }
 
 type DetailTrx struct {
-	ID          string    `gorm:"primaryKey;type:varchar(50);column:id"`
-	IdTrx       string    `gorm:"column:id_trx;type:varchar(50);not null"`
-	IdLogProduk string    `gorm:"column:id_log_produk;type:varchar(50);not null"`
-	IdToko      string    `gorm:"column:id_toko;type:varchar(50);not null"`
-	Kuantitas   int       `gorm:"column:kuantitas;type:int"`
-	HargaTotal  int       `gorm:"column:harga_total;type:int"`
-	UpdatedAt   time.Time `gorm:"column:updated_at;autoUpdateTime"`
-	CreatedAt   time.Time `gorm:"column:created_at;autoCreateTime"`
+	ID          string           `gorm:"primaryKey;type:varchar(50);column:id"`
+	IdTrx       string           `gorm:"column:id_trx;type:varchar(50);not null"`
+	IdLogProduk string           `gorm:"column:id_log_produk;type:varchar(50);not null"`
+	LogProduk   produk.LogProduk `gorm:"foreignKey:IdLogProduk"`
+	IdToko      string           `gorm:"column:id_toko;type:varchar(50);not null"`
+	Kuantitas   int              `gorm:"column:kuantitas;type:int"`
+	HargaTotal  int              `gorm:"column:harga_total;type:int"`
+	UpdatedAt   time.Time        `gorm:"column:updated_at;autoUpdateTime"`
+	CreatedAt   time.Time        `gorm:"column:created_at;autoCreateTime"`
 }

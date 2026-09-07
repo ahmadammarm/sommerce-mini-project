@@ -376,6 +376,26 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Get Transaction Detail (with Log Produk)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/transactions/:id",
+              "host": ["{{base_url}}"],
+              "path": ["transactions", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "REPLACE_WITH_TRX_ID"
+                }
+              ]
+            },
+            "description": "Mendapatkan rincian keranjang transaksi berserta rekaman harga dan nama dari snapshot Log Produk pada detik pembelian dilakukan."
+          },
+          "response": []
         }
       ]
     }
