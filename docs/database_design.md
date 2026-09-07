@@ -1,106 +1,108 @@
-# Sommerce Mini Project - Database Design Documentation
+# Dokumentasi Desain Database Sommerce
 
-This document outlines the database schema for the Sommerce Mini Project, which is designed as an e-commerce/marketplace platform with multi-vendor and reseller capabilities.
+Dokumen ini menjabarkan skema database untuk Proyek Mini Sommerce. Sistem ini dirancang sebagai platform e-commerce yang mendukung kapabilitas multi-vendor serta memisahkan harga untuk reseller dan konsumen umum.
 
-## Overview
-The schema supports a system where users can act as buyers or sellers (vendors). It includes robust handling for product variations in pricing (reseller vs. consumer), multi-vendor cart fulfillment, and immutable transaction history through product logging.
+## Gambaran Umum
+Skema database ini mendukung sebuah sistem di mana pengguna dapat berperan ganda sebagai pembeli maupun penjual (vendor). Sistem ini dirancang dengan penanganan kokoh terhadap variasi harga produk, pemenuhan keranjang belanja dari berbagai vendor secara bersamaan, serta riwayat transaksi yang bersifat *immutable* melalui mekanisme pencatatan log produk.
 
 ---
 
-## 1. User Management
+## 1. Manajemen Pengguna
 
-### `User` Table
-The central table for account management and authentication.
-*   **Primary Key**: `id`
+### Tabel `users`
+Tabel sentral untuk manajemen akun dan otentikasi.
+*   **Primary Key**: `id` (CUID)
 *   **Fields**:
-    *   `nama`, `email`, `kata_sandi` (password): Basic profile and login credentials.
-    *   `notelp`: Unique phone number constraint.
-    *   `tanggal_lahir` (birth date), `jenis_kelamin` (gender), `tentang` (about), `pekerjaan` (occupation): User profile details.
-    *   `id_provinsi`, `id_kota`: References to external/static location tables (not pictured) for the user's primary region.
-    *   `isAdmin`: Boolean flag to identify system administrators versus regular users.
-    *   Timestamps: `created_at`, `updated_at`
+    *   `nama`, `email`, `kata_sandi`: Profil dasar dan kredensial akses masuk. Kolom `email` bersifat `UNIQUE`.
+    *   `notelp`: Nomor telepon dengan batasan `UNIQUE` constraint untuk mencegah pendaftaran ganda.
+    *   `tanggal_lahir`, `jenis_kelamin`, `tentang`, `pekerjaan`: Detail profil tambahan milik pengguna.
+    *   `id_provinsi`, `id_kota`: Referensi ke data statis wilayah Indonesia (melalui Emsifa API) untuk menentukan domisili utama pengguna.
+    *   `isAdmin`: Boolean flag untuk membedakan antara administrator sistem dan pengguna biasa.
+    *   `created_at`, `updated_at`: Pencatat waktu otomatis.
 
-### `alamat` (Address) Table
-Stores physical addresses associated with a user for shipping purposes.
+### Tabel `alamats` (Alamat Pengiriman)
+Menyimpan data alamat fisik yang terikat dengan pengguna untuk keperluan pengiriman barang.
 *   **Primary Key**: `id`
-*   **Foreign Key**: `id_user` -> `User(id)`
-*   **Fields**: `judul_alamat` (e.g., Home, Office), `nama_penerima` (recipient name), `no_telp` (contact number), `detail_alamat` (full physical address).
-*   **Relationship**: **1-to-Many** (`User` has many `alamat`). A user can store multiple shipping addresses to choose from during checkout.
+*   **Foreign Key**: `id_user` menunjuk ke `users(id)`
+*   **Fields**: `judul_alamat` (contoh: Rumah, Kantor), `nama_penerima`, `no_telp`, `detail_alamat`, `id_provinsi`, `id_kota`.
+*   **Relasi**: **1-to-Many**. Satu pengguna (`users`) dapat menyimpan dan mengelola banyak alamat (`alamats`) untuk dipilih pada saat proses checkout.
 
 ---
 
-## 2. Store & Vendor System
+## 2. Sistem Toko dan Penjual
 
-### `toko` (Store) Table
-Represents a shop front owned by a user on the platform.
+### Tabel `tokos`
+Merepresentasikan profil etalase toko yang dimiliki oleh seorang pengguna di dalam platform.
 *   **Primary Key**: `id`
-*   **Foreign Key**: `id_user` -> `User(id)`
-*   **Fields**: `nama_toko` (Store Name), `url_foto` (Store Logo/Banner URL).
-*   **Relationship**: **1-to-1** (`User` has one `toko`). A user account can be associated with a single vendor shop.
+*   **Foreign Key**: `id_user` menunjuk ke `users(id)` (`UNIQUE`)
+*   **Fields**: `nama_toko`, `url_foto` (URL untuk logo atau banner toko).
+*   **Relasi**: **1-to-1**. Setiap akun pengguna hanya dapat memiliki tepat satu toko. Entitas toko ini dibuat secara otomatis oleh sistem saat pengguna pertama kali mendaftar.
 
 ---
 
-## 3. Product Catalog
+## 3. Katalog Produk
 
-### `category` Table
-Lookup table for product categories.
+### Tabel `categories`
+Tabel *lookup* untuk pengelompokan jenis produk. Dikelola sepenuhnya oleh Administrator.
 *   **Primary Key**: `id`
-*   **Fields**: `nama_category`
+*   **Fields**: `nama_category` (Nama Kategori)
 
-### `produk` (Product) Table
-Stores active listings available for purchase.
+### Tabel `produks`
+Menyimpan daftar produk aktif yang tersedia untuk dibeli.
 *   **Primary Key**: `id`
 *   **Foreign Keys**: 
-    *   `id_toko` -> `toko(id)`
-    *   `id_category` -> `category(id)`
-*   **Fields**: `nama_produk`, `slug` (for SEO-friendly URLs), `harga_reseller` (price for resellers), `harga_konsumen` (standard retail price), `stok` (inventory quantity), `deskripsi`.
-*   **Relationships**: 
-    *   **Many-to-1** with `toko`: A store lists many products.
-    *   **Many-to-1** with `category`: A category contains many products.
+    *   `id_toko` menunjuk ke `tokos(id)`
+    *   `id_category` menunjuk ke `categories(id)`
+*   **Fields**: `nama_produk`, `slug` (teks SEO-friendly untuk URL), `harga_reseller` (harga khusus pengecer), `harga_konsumen` (harga ritel standar), `stok` (jumlah ketersediaan barang), `deskripsi`.
+*   **Relasi**: 
+    *   **Many-to-1** dengan `tokos`: Satu toko dapat mendaftarkan banyak produk.
+    *   **Many-to-1** dengan `categories`: Satu kategori dapat menampung banyak produk.
 
-### `foto_produk` (Product Photos) Table
-Stores image galleries for products.
+### Tabel `foto_produks`
+Menyimpan galeri gambar untuk setiap produk.
 *   **Primary Key**: `id`
-*   **Foreign Key**: `id_produk` -> `produk(id)`
-*   **Fields**: `url`
-*   **Relationship**: **1-to-Many** (`produk` has many `foto_produk`).
+*   **Foreign Key**: `id_produk` menunjuk ke `produks(id)`
+*   **Fields**: `url` (Lokasi publik dari berkas gambar yang telah diunggah).
+*   **Relasi**: **1-to-Many**. Satu produk (`produks`) dapat memiliki banyak foto (`foto_produks`).
 
-### `log_produk` (Product Log) Table
-Maintains historical snapshots of product details.
+### Tabel `log_produks` (Rekam Jejak Historis Produk)
+Mempertahankan *snapshot* historis dari rincian produk pada detik tertentu.
 *   **Primary Key**: `id`
-*   **Fields**: Mirrors the `produk` table (`id_produk`, `nama_produk`, `slug`, `harga_reseller`, `harga_konsumen`, `deskripsi`, `id_toko`, `id_category`).
-*   **Purpose**: Whenever a product is modified, or when a purchase occurs, a snapshot can be logged here. Transactions link to this table instead of the live `produk` table to preserve historical integrity.
+*   **Fields**: Merupakan cerminan pasti dari tabel `produks` (`id_produk`, `nama_produk`, `slug`, `harga_reseller`, `harga_konsumen`, `deskripsi`, `id_toko`, `id_category`).
+*   **Tujuan**: *Snapshot* historis ini dibuat dan diisi secara eksklusif hanya pada saat transaksi terjadi (saat *checkout*). Bukti kuitansi transaksi diikat ke tabel ini, sehingga riwayat transaksi terjamin integritasnya.
 
 ---
 
-## 4. Order & Transactions
+## 4. Pesanan dan Transaksi
 
-### `trx` (Transaction Header) Table
-Records an entire checkout session/order placed by a user.
+### Tabel `trxs` (Header Transaksi)
+Merekam satu sesi penuh pemesanan atau keranjang belanja dari seorang pembeli.
 *   **Primary Key**: `id`
 *   **Foreign Keys**:
-    *   `id_user` -> `User(id)`
-    *   `alamat_pengiriman` -> `alamat(id)`
-*   **Fields**: `harga_total` (grand total), `kode_invoice` (unique invoice identifier), `method_bayar` (payment method).
-*   **Relationship**: **1-to-Many** (`User` has many `trx`).
+    *   `id_user` menunjuk ke `users(id)`
+    *   `alamat_pengiriman` menunjuk ke `alamats(id)`
+*   **Fields**: `harga_total` (total keseluruhan yang harus dibayar), `kode_invoice` (pengenal kuitansi unik), `method_bayar` (metode pembayaran).
+*   **Idempotency Key**: Kolom dengan `UNIQUE constraint` yang mencegah pengguna secara tidak sengaja memproses keranjang yang sama dua kali akibat gangguan jaringan (Double Checkout).
+*   **Relasi**: **1-to-Many** (`users` memiliki banyak `trxs`).
 
-### `detail_trx` (Transaction Line Items) Table
-Records the individual items purchased within a transaction.
+### Tabel `detail_trxs` (Rincian Item Transaksi)
+Merekam barang-barang individual yang dibeli di dalam suatu transaksi.
 *   **Primary Key**: `id`
 *   **Foreign Keys**:
-    *   `id_trx` -> `trx(id)`
-    *   `id_log_produk` -> `log_produk(id)`
-    *   `id_toko` -> `toko(id)`
-*   **Fields**: `kuantitas` (quantity bought), `harga_total` (subtotal for this line item).
-*   **Relationships**:
-    *   **Many-to-1** with `trx`: One transaction has many line items.
-    *   **Many-to-1** with `log_produk`: Links to the snapshot of the product to ensure the receipt remains accurate even if the live product is altered.
-    *   **Many-to-1** with `toko`: Tracks which store fulfills this specific line item.
+    *   `id_trx` menunjuk ke `trxs(id)`
+    *   `id_log_produk` menunjuk ke `log_produks(id)`
+    *   `id_toko` menunjuk ke `tokos(id)`
+*   **Fields**: `kuantitas` (jumlah yang dibeli), `harga_total` (subtotal untuk rincian ini).
+*   **Relasi**:
+    *   **Many-to-1** dengan `trxs`: Satu pesanan memiliki banyak rincian barang.
+    *   **Many-to-1** dengan `log_produks`: Mengikat rincian pesanan dengan *snapshot* historis, memastikan nota belanja tidak akan berubah meskipun harga produk asli diubah oleh penjual di masa depan.
+    *   **Many-to-1** dengan `tokos`: Melacak toko mana yang harus memenuhi (mengirimkan) rincian pesanan spesifik ini.
 
 ---
 
-## Key Architectural Decisions
+## Keputusan Arsitektur Kunci
 
-1.  **Immutable Financial Records (`log_produk`)**: By tying transaction details (`detail_trx`) to a product snapshot (`log_produk`) rather than the active `produk` table, the platform ensures that changes to a product's price or description by a vendor will not retroactively alter the data of completed orders.
-2.  **Reseller/Dropship Support**: The inclusion of both `harga_reseller` and `harga_konsumen` directly supports a business model where authorized resellers receive discounted rates while standard users pay retail pricing.
-3.  **Multi-Vendor Checkout**: Because `detail_trx` tracks `id_toko` at the line-item level, the database natively supports users checking out a single cart (`trx`) containing items from multiple different vendors.
+1.  **Rekam Jejak Finansial Permanen (Immutable)**: Dengan menautkan rincian transaksi (`detail_trxs`) ke tabel *snapshot* (`log_produks`) alih-alih ke tabel produk yang aktif, platform memastikan bahwa perubahan harga atau deskripsi yang dilakukan oleh vendor tidak akan pernah merusak akurasi data pesanan di masa lampau.
+2.  **Perlindungan Konkurensi (Pessimistic Locking)**: Pada saat transaksi dibuat, sistem menerapkan perintah `SELECT ... FOR UPDATE` pada tabel `produks`. Ini memaksa pembeli lain untuk mengantre di tingkat database (menerapkan *Row Lock*), menjamin bahwa stok barang tidak akan pernah bernilai negatif (minus) walau diakses ribuan pengguna secara serentak (*Race Condition*).
+3.  **Dukungan Pengecer (Reseller)**: Penyertaan atribut ganda `harga_reseller` dan `harga_konsumen` secara langsung mendukung model bisnis waralaba, di mana reseller terdaftar berhak mendapatkan potongan harga sistemik dibandingkan dengan pengguna standar.
+4.  **Satu Keranjang Berbagai Toko (Multi-Vendor Cart)**: Mengingat tabel `detail_trxs` menyimpan nilai `id_toko` secara mandiri pada setiap baris item, struktur database ini secara alami mendukung skenario *multi-vendor* di mana pengguna membeli banyak barang dari berbagai toko yang berbeda di dalam satu kali proses checkout.
