@@ -1,6 +1,6 @@
 # Sommerce (Social Commerce) - Backend API
 
-Sommerce (kependekan dari Social Commerce) adalah sebuah RESTful API E-Commerce yang dikembangkan sebagai proyek mini yang relevan dengan ekosistem model bisnis Evermos. 
+Sommerce (kependekan dari Social Commerce) adalah sebuah RESTful API E-Commerce yang dikembangkan sebagai tugas akhir atau proyek mini di program project based internship dari Evermos. 
 
 Sistem ini dirancang dengan standar level produksi menggunakan Clean Architecture (Handler, Service, Repository), menjamin skalabilitas, keamanan, dan keandalan data transaksi finansial.
 
