@@ -20,12 +20,24 @@ func NewRouter(
 	transactionHandler *transaction.TransactionHandler,
 ) *fiber.App {
 	app := fiber.New()
+
+	// 1. Security Headers (Helmet)
+	app.Use(middleware.SecurityHeaders())
+
+	// 2. CORS
+	app.Use(middleware.Cors())
+
+	// 3. Global Rate Limiter (Anti DDoS)
+	app.Use(middleware.GlobalRateLimiter())
+
 	api := app.Group("/api")
 
 	// --- Auth ---
 	auth := api.Group("/auth")
 	auth.Post("/register", userHandler.Register)
-	auth.Post("/login", userHandler.Login)
+
+	// Strict Rate Limiter for Login (Anti Brute-Force)
+	auth.Post("/login", middleware.AuthRateLimiter(), userHandler.Login)
 
 	// --- Users ---
 	users := api.Group("/users", middleware.Protected())
@@ -34,8 +46,8 @@ func NewRouter(
 
 	// --- Toko ---
 	stores := api.Group("/toko")
-	stores.Get("/:id", tokoHandler.GetTokoByID) // Publicly view a store
-	
+	stores.Get("/:id", tokoHandler.GetTokoByID)
+
 	storesProtected := stores.Group("/", middleware.Protected())
 	storesProtected.Get("/me", tokoHandler.GetMyToko)
 	storesProtected.Put("/me", tokoHandler.UpdateMyToko)
@@ -72,6 +84,6 @@ func NewRouter(
 	transactions.Post("/checkout", transactionHandler.Checkout)
 	transactions.Get("/", transactionHandler.GetMyTransactions)
 	transactions.Get("/:id", transactionHandler.GetTransactionDetail)
-	
+
 	return app
 }
