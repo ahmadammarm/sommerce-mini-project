@@ -7,6 +7,7 @@ import (
 	"github.com/ahmadammarm/sommerce-mini-project/internal/produk"
 	"github.com/ahmadammarm/sommerce-mini-project/internal/toko"
 	"github.com/ahmadammarm/sommerce-mini-project/internal/transaction"
+	"github.com/ahmadammarm/sommerce-mini-project/internal/upload"
 	"github.com/ahmadammarm/sommerce-mini-project/internal/user"
 	"github.com/gofiber/fiber/v2"
 )
@@ -18,6 +19,7 @@ func NewRouter(
 	categoryHandler *category.CategoryHandler,
 	produkHandler *produk.ProdukHandler,
 	transactionHandler *transaction.TransactionHandler,
+	uploadHandler *upload.UploadHandler,
 ) *fiber.App {
 	app := fiber.New()
 
@@ -30,7 +32,13 @@ func NewRouter(
 	// 3. Global Rate Limiter (Anti DDoS)
 	app.Use(middleware.GlobalRateLimiter())
 
+	// Serve Static Files for Uploads
+	app.Static("/uploads", "./public/uploads")
+
 	api := app.Group("/api")
+
+	// --- Upload ---
+	api.Post("/upload", middleware.Protected(), uploadHandler.UploadImage)
 
 	// --- Auth ---
 	auth := api.Group("/auth")

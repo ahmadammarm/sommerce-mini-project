@@ -288,7 +288,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nama_produk\": \"Laptop Super\",\n  \"slug\": \"laptop-super\",\n  \"harga_reseller\": \"10000000\",\n  \"harga_konsumen\": \"12000000\",\n  \"stok\": 10,\n  \"deskripsi\": \"Laptop super kencang.\",\n  \"id_category\": \"masukkan-id-category\"\n}",
+              "raw": "{\n  \"nama_produk\": \"Laptop Super\",\n  \"harga_reseller\": 10000000,\n  \"harga_konsumen\": 12000000,\n  \"stok\": 10,\n  \"deskripsi\": \"Laptop super kencang.\",\n  \"id_category\": \"masukkan-id-category\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

@@ -50,13 +50,29 @@ func (r *transactionRepository) CreateCheckout(ctx context.Context, trx *Trx, it
 				return err
 			}
 
+			// CREATE LOG PRODUK (Snapshot for Transaction)
+			logP := produk.LogProduk{
+				ID:            r.idGen.GenerateID(),
+				IdProduk:      p.ID,
+				IdToko:        p.IdToko,
+				IdCategory:    p.IdCategory,
+				NamaProduk:    p.NamaProduk,
+				Slug:          p.Slug,
+				HargaReseller: p.HargaReseller,
+				HargaKonsumen: p.HargaKonsumen,
+				Deskripsi:     p.Deskripsi,
+			}
+			if err := tx.Create(&logP).Error; err != nil {
+				return err
+			}
+
 			subTotal := p.HargaKonsumen * item.Kuantitas
 			grandTotal += subTotal
 
 			details = append(details, DetailTrx{
 				ID:          r.idGen.GenerateID(),
 				IdTrx:       trx.ID,
-				IdLogProduk: p.ID, 
+				IdLogProduk: logP.ID, // Link to the newly generated historical log
 				IdToko:      p.IdToko,
 				Kuantitas:   item.Kuantitas,
 				HargaTotal:  subTotal,

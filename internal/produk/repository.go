@@ -9,8 +9,8 @@ import (
 
 // ProdukRepository defines the contract for Produk database operations
 type ProdukRepository interface {
-	Create(ctx context.Context, produk *Produk, fotos []FotoProduk, log *LogProduk) error
-	Update(ctx context.Context, produk *Produk, log *LogProduk) error
+	Create(ctx context.Context, produk *Produk, fotos []FotoProduk) error
+	Update(ctx context.Context, produk *Produk) error
 	FindByID(ctx context.Context, id string) (*Produk, error)
 	FindFotosByProdukID(ctx context.Context, produkID string) ([]FotoProduk, error)
 	FindAll(ctx context.Context, filter ProductFilterDTO) ([]Produk, int64, error)
@@ -25,8 +25,8 @@ func NewProdukRepository(db *gorm.DB) ProdukRepository {
 	return &produkRepository{db: db}
 }
 
-// Create uses a DB transaction to save the Product, Photos, and initial LogProduk together atomically
-func (r *produkRepository) Create(ctx context.Context, produk *Produk, fotos []FotoProduk, log *LogProduk) error {
+// Create uses a DB transaction to save the Product and Photos atomically
+func (r *produkRepository) Create(ctx context.Context, produk *Produk, fotos []FotoProduk) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// 1. Insert Main Product
 		if err := tx.Create(produk).Error; err != nil {
@@ -40,30 +40,13 @@ func (r *produkRepository) Create(ctx context.Context, produk *Produk, fotos []F
 			}
 		}
 
-		// 3. Insert Snapshot Log
-		if err := tx.Create(log).Error; err != nil {
-			return err
-		}
-
 		return nil // Commits successfully
 	})
 }
 
-// Update uses a DB transaction to update the Product and insert a new snapshot into LogProduk atomically
-func (r *produkRepository) Update(ctx context.Context, produk *Produk, log *LogProduk) error {
-	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		// 1. Update existing product
-		if err := tx.Save(produk).Error; err != nil {
-			return err
-		}
-
-		// 2. Insert new historical snapshot
-		if err := tx.Create(log).Error; err != nil {
-			return err
-		}
-
-		return nil // Commits successfully
-	})
+// Update saves the Product directly
+func (r *produkRepository) Update(ctx context.Context, produk *Produk) error {
+	return r.db.WithContext(ctx).Save(produk).Error
 }
 
 // FindByID retrieves a single product by its CUID

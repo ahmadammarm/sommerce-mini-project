@@ -76,20 +76,7 @@ func (s *produkService) CreateProduk(ctx context.Context, userID string, req *Cr
 		})
 	}
 
-	// 3. Create Initial Snapshot (Rule 8)
-	log := &LogProduk{
-		ID:            s.idGen.GenerateID(),
-		IdProduk:      produkID,
-		NamaProduk:    req.NamaProduk,
-		Slug:          slug,
-		HargaReseller: req.HargaReseller,
-		HargaKonsumen: req.HargaKonsumen,
-		Deskripsi:     req.Deskripsi,
-		IdCategory:    req.IdCategory,
-		IdToko:        vendorToko.ID,
-	}
-
-	if err := s.produkRepo.Create(ctx, p, fotos, log); err != nil {
+	if err := s.produkRepo.Create(ctx, p, fotos); err != nil {
 		return nil, err
 	}
 
@@ -140,20 +127,7 @@ func (s *produkService) UpdateProduk(ctx context.Context, userID, produkID strin
 		p.IdCategory = req.IdCategory
 	}
 
-	// Create New Snapshot (Rule 8)
-	log := &LogProduk{
-		ID:            s.idGen.GenerateID(),
-		IdProduk:      p.ID,
-		NamaProduk:    p.NamaProduk,
-		Slug:          p.Slug,
-		HargaReseller: p.HargaReseller,
-		HargaKonsumen: p.HargaKonsumen,
-		Deskripsi:     p.Deskripsi,
-		IdCategory:    p.IdCategory,
-		IdToko:        p.IdToko,
-	}
-
-	if err := s.produkRepo.Update(ctx, p, log); err != nil {
+	if err := s.produkRepo.Update(ctx, p); err != nil {
 		return nil, err
 	}
 

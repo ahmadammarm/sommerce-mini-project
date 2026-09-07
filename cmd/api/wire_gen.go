@@ -13,6 +13,7 @@ import (
 	"github.com/ahmadammarm/sommerce-mini-project/internal/router"
 	"github.com/ahmadammarm/sommerce-mini-project/internal/toko"
 	"github.com/ahmadammarm/sommerce-mini-project/internal/transaction"
+	"github.com/ahmadammarm/sommerce-mini-project/internal/upload"
 	"github.com/ahmadammarm/sommerce-mini-project/internal/user"
 	"github.com/ahmadammarm/sommerce-mini-project/pkg/config"
 	"github.com/ahmadammarm/sommerce-mini-project/pkg/emsifa"
@@ -48,6 +49,7 @@ func InitializeApp() (*fiber.App, error) {
 	transactionRepository := transaction.NewTransactionRepository(db, idGenerator)
 	transactionService := transaction.NewTransactionService(transactionRepository, alamatRepository, idGenerator, validate)
 	transactionHandler := transaction.NewTransactionHandler(transactionService)
-	app := router.NewRouter(userHandler, tokoHandler, alamatHandler, categoryHandler, produkHandler, transactionHandler)
+	uploadHandler := upload.NewUploadHandler()
+	app := router.NewRouter(userHandler, tokoHandler, alamatHandler, categoryHandler, produkHandler, transactionHandler, uploadHandler)
 	return app, nil
 }
