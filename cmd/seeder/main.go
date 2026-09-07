@@ -48,9 +48,9 @@ func main() {
 		JenisKelamin: "Laki-laki",
 		Tentang:      "Saya adalah penguasa sistem ini",
 		Pekerjaan:    "System Administrator",
-		IdProvinsi:   "11",   // Aceh
-		IdKota:       "1101", // Kab. Simeulue
-		IsAdmin:      true,   // Kunci akses ke endpoint Category
+		IdProvinsi:   "35",    // Jawa Timur
+		IdKota:       "35.73", // Kota Malang
+		IsAdmin:      true,    // Kunci akses ke endpoint Category
 	}
 	db.Create(&adminUser)
 	fmt.Println("👤 Admin User berhasil dibuat.")
