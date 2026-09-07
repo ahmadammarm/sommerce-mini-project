@@ -9,7 +9,8 @@ type Trx struct {
 	IdUser           string    `gorm:"column:id_user;type:varchar(50);not null"`
 	AlamatPengiriman string    `gorm:"column:alamat_pengiriman;type:varchar(50);not null"`
 	HargaTotal       int       `gorm:"column:harga_total;type:int"`
-	KodeInvoice      string    `gorm:"column:kode_invoice;type:varchar(255)"`
+	IdempotencyKey   string    `gorm:"column:idempotency_key;type:varchar(100);unique;not null"`
+	KodeInvoice      string    `gorm:"column:kode_invoice;type:varchar(255);unique"`
 	MethodBayar      string    `gorm:"column:method_bayar;type:varchar(255)"`
 	UpdatedAt        time.Time `gorm:"column:updated_at;autoUpdateTime"`
 	CreatedAt        time.Time `gorm:"column:created_at;autoCreateTime"`

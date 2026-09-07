@@ -2,70 +2,93 @@ package transaction
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ahmadammarm/sommerce-mini-project/internal/produk"
+	"github.com/ahmadammarm/sommerce-mini-project/pkg/uid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
-// TransactionRepository defines the contract for Checkout and Transaction database operations
 type TransactionRepository interface {
-	CreateCheckout(ctx context.Context, trx *Trx, details []DetailTrx, productsToUpdate []produk.Produk) error
+	CreateCheckout(ctx context.Context, trx *Trx, items []CheckoutItemRequest) error
 	FindByUserID(ctx context.Context, userID string) ([]Trx, error)
 	FindDetailsByTrxID(ctx context.Context, trxID string) ([]DetailTrx, error)
 }
 
 type transactionRepository struct {
-	db *gorm.DB
+	db    *gorm.DB
+	idGen uid.IDGenerator
 }
 
-// NewTransactionRepository is the constructor for Dependency Injection
-func NewTransactionRepository(db *gorm.DB) TransactionRepository {
-	return &transactionRepository{db: db}
+func NewTransactionRepository(db *gorm.DB, idg uid.IDGenerator) TransactionRepository {
+	return &transactionRepository{db: db, idGen: idg}
 }
 
-// CreateCheckout guarantees that Order headers, Details, and Stock decrements happen atomically
-func (r *transactionRepository) CreateCheckout(ctx context.Context, trx *Trx, details []DetailTrx, productsToUpdate []produk.Produk) error {
+func (r *transactionRepository) CreateCheckout(ctx context.Context, trx *Trx, items []CheckoutItemRequest) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var details []DetailTrx
+		var grandTotal int
 
-		// 1. Insert Header
-		if err := tx.Create(trx).Error; err != nil {
-			return err // Triggers rollback
+		for _, item := range items {
+			var p produk.Produk
+			
+			// PESSIMISTIC LOCK: Lock the product row so no other checkout can read it simultaneously
+			if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+				Where("id = ?", item.IdProduk).First(&p).Error; err != nil {
+				return fmt.Errorf("product %s not found or locked", item.IdProduk)
+			}
+
+			// Validate Stock
+			if p.Stok < item.Kuantitas {
+				return fmt.Errorf("insufficient stock for product %s (available: %d)", p.NamaProduk, p.Stok)
+			}
+
+			// Deduct Stock
+			p.Stok -= item.Kuantitas
+			if err := tx.Save(&p).Error; err != nil {
+				return err
+			}
+
+			subTotal := p.HargaKonsumen * item.Kuantitas
+			grandTotal += subTotal
+
+			details = append(details, DetailTrx{
+				ID:          r.idGen.GenerateID(),
+				IdTrx:       trx.ID,
+				IdLogProduk: p.ID, 
+				IdToko:      p.IdToko,
+				Kuantitas:   item.Kuantitas,
+				HargaTotal:  subTotal,
+			})
 		}
 
-		// 2. Insert Transaction Details
+		trx.HargaTotal = grandTotal
+
+		// Save Header
+		if err := tx.Create(trx).Error; err != nil {
+			return err
+		}
+
+		// Save Details
 		if len(details) > 0 {
 			if err := tx.Create(&details).Error; err != nil {
-				return err // Triggers rollback
+				return err
 			}
 		}
 
-		// 3. Update Product Stocks
-		for _, p := range productsToUpdate {
-			if err := tx.Save(&p).Error; err != nil {
-				return err // Triggers rollback if stock update fails
-			}
-		}
-
-		return nil // Auto Commits successfully
+		return nil
 	})
 }
 
-// FindByUserID retrieves all transaction headers for a specific user
 func (r *transactionRepository) FindByUserID(ctx context.Context, userID string) ([]Trx, error) {
 	var trxs []Trx
 	err := r.db.WithContext(ctx).Where("id_user = ?", userID).Find(&trxs).Error
-	if err != nil {
-		return nil, err
-	}
-	return trxs, nil
+	return trxs, err
 }
 
-// FindDetailsByTrxID retrieves all the items/details purchased within a specific transaction
 func (r *transactionRepository) FindDetailsByTrxID(ctx context.Context, trxID string) ([]DetailTrx, error) {
 	var details []DetailTrx
 	err := r.db.WithContext(ctx).Where("id_trx = ?", trxID).Find(&details).Error
-	if err != nil {
-		return nil, err
-	}
-	return details, nil
+	return details, err
 }

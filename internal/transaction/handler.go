@@ -15,6 +15,14 @@ func NewTransactionHandler(service TransactionService) *TransactionHandler {
 
 func (h *TransactionHandler) Checkout(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
+	idempotencyKey := c.Get("X-Idempotency-Key")
+
+	if idempotencyKey == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(response.WebResponse{
+			Code:    fiber.StatusBadRequest,
+			Message: "X-Idempotency-Key header is required to prevent double checkout",
+		})
+	}
 
 	var req CheckoutRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -24,7 +32,7 @@ func (h *TransactionHandler) Checkout(c *fiber.Ctx) error {
 		})
 	}
 
-	res, err := h.service.Checkout(c.Context(), userID, &req)
+	res, err := h.service.Checkout(c.Context(), userID, idempotencyKey, &req)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.WebResponse{
 			Code:    fiber.StatusBadRequest,

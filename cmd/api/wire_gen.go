@@ -45,8 +45,8 @@ func InitializeApp() (*fiber.App, error) {
 	produkRepository := produk.NewProdukRepository(db)
 	produkService := produk.NewProdukService(produkRepository, tokoRepository, idGenerator, validate)
 	produkHandler := produk.NewProdukHandler(produkService)
-	transactionRepository := transaction.NewTransactionRepository(db)
-	transactionService := transaction.NewTransactionService(transactionRepository, produkRepository, alamatRepository, idGenerator, validate)
+	transactionRepository := transaction.NewTransactionRepository(db, idGenerator)
+	transactionService := transaction.NewTransactionService(transactionRepository, alamatRepository, idGenerator, validate)
 	transactionHandler := transaction.NewTransactionHandler(transactionService)
 	app := router.NewRouter(userHandler, tokoHandler, alamatHandler, categoryHandler, produkHandler, transactionHandler)
 	return app, nil
