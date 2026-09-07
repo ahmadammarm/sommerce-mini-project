@@ -53,14 +53,16 @@ func (c *emsifaClient) fetchAndCheckID(ctx context.Context, endpoint string, tar
 		return false, nil
 	}
 
-	// Parse the JSON array
-	var regions []emsifaRegion
-	if err := json.NewDecoder(resp.Body).Decode(&regions); err != nil {
+	// Parse the JSON array wrapped in 'data' object
+	var response struct {
+		Data []emsifaRegion `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return false, fmt.Errorf("failed to decode json from emsifa: %w", err)
 	}
 
 	// Loop through the list to find the matching ID
-	for _, region := range regions {
+	for _, region := range response.Data {
 		if region.ID == targetID {
 			return true, nil // Found it!
 		}
