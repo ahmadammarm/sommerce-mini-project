@@ -79,20 +79,8 @@ func (s *transactionService) GetMyTransactions(ctx context.Context, userID strin
 }
 
 func (s *transactionService) GetTransactionDetail(ctx context.Context, userID, trxID string) (*TransactionDetailResponse, error) {
-	trxs, err := s.trxRepo.FindByUserID(ctx, userID)
+	target, err := s.trxRepo.FindTrxByIDAndUserID(ctx, trxID, userID)
 	if err != nil {
-		return nil, err
-	}
-
-	var target *Trx
-	for _, t := range trxs {
-		if t.ID == trxID {
-			target = &t
-			break
-		}
-	}
-
-	if target == nil {
 		return nil, errors.New("transaction not found or unauthorized")
 	}
 

@@ -52,7 +52,7 @@ func (r *produkRepository) Update(ctx context.Context, produk *Produk) error {
 // FindByID retrieves a single product by its CUID
 func (r *produkRepository) FindByID(ctx context.Context, id string) (*Produk, error) {
 	var p Produk
-	err := r.db.WithContext(ctx).Where("id = ?", id).First(&p).Error
+	err := r.db.WithContext(ctx).Where("id = ?", id).Preload("Fotos").First(&p).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil // Graceful error handling
@@ -100,7 +100,7 @@ func (r *produkRepository) FindAll(ctx context.Context, filter ProductFilterDTO)
 	}
 
 	// Execute final retrieval query
-	if err := query.Find(&produks).Error; err != nil {
+	if err := query.Preload("Fotos").Find(&produks).Error; err != nil {
 		return nil, 0, err
 	}
 

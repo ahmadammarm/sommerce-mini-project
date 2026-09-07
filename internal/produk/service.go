@@ -80,7 +80,9 @@ func (s *produkService) CreateProduk(ctx context.Context, userID string, req *Cr
 		return nil, err
 	}
 
-	return mapToProdukResponse(p, fotos), nil
+	// Just for returning immediately after creation, attach manually
+	p.Fotos = fotos
+	return mapToProdukResponse(p), nil
 }
 
 func (s *produkService) UpdateProduk(ctx context.Context, userID, produkID string, req *UpdateProdukRequest) (*ProdukResponse, error) {
@@ -131,8 +133,7 @@ func (s *produkService) UpdateProduk(ctx context.Context, userID, produkID strin
 		return nil, err
 	}
 
-	fotos, _ := s.produkRepo.FindFotosByProdukID(ctx, p.ID)
-	return mapToProdukResponse(p, fotos), nil
+	return mapToProdukResponse(p), nil
 }
 
 func (s *produkService) GetProdukByID(ctx context.Context, produkID string) (*ProdukResponse, error) {
@@ -144,12 +145,7 @@ func (s *produkService) GetProdukByID(ctx context.Context, produkID string) (*Pr
 		return nil, errors.New("product not found")
 	}
 
-	fotos, err := s.produkRepo.FindFotosByProdukID(ctx, produkID)
-	if err != nil {
-		return nil, err
-	}
-
-	return mapToProdukResponse(p, fotos), nil
+	return mapToProdukResponse(p), nil
 }
 
 func (s *produkService) GetAllProduk(ctx context.Context, filter ProductFilterDTO) (*response.PagedResponse, error) {
@@ -167,8 +163,7 @@ func (s *produkService) GetAllProduk(ctx context.Context, filter ProductFilterDT
 
 	var data []ProdukResponse
 	for _, p := range products {
-		fotos, _ := s.produkRepo.FindFotosByProdukID(ctx, p.ID) // N+1 query warning (acceptable for mini project)
-		data = append(data, *mapToProdukResponse(&p, fotos))
+		data = append(data, *mapToProdukResponse(&p))
 	}
 
 	totalPages := int(math.Ceil(float64(totalItems) / float64(filter.Limit)))
@@ -185,9 +180,9 @@ func (s *produkService) GetAllProduk(ctx context.Context, filter ProductFilterDT
 }
 
 // Helpers
-func mapToProdukResponse(p *Produk, fotos []FotoProduk) *ProdukResponse {
+func mapToProdukResponse(p *Produk) *ProdukResponse {
 	var urls []string
-	for _, f := range fotos {
+	for _, f := range p.Fotos {
 		urls = append(urls, f.Url)
 	}
 	return &ProdukResponse{

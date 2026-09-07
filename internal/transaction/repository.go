@@ -13,6 +13,7 @@ import (
 type TransactionRepository interface {
 	CreateCheckout(ctx context.Context, trx *Trx, items []CheckoutItemRequest) error
 	FindByUserID(ctx context.Context, userID string) ([]Trx, error)
+	FindTrxByIDAndUserID(ctx context.Context, trxID, userID string) (*Trx, error)
 	FindDetailsByTrxID(ctx context.Context, trxID string) ([]DetailTrx, error)
 }
 
@@ -29,6 +30,7 @@ func (r *transactionRepository) CreateCheckout(ctx context.Context, trx *Trx, it
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var details []DetailTrx
 		var grandTotal int
+		var logs []produk.LogProduk // Bulk Insert optimization
 
 		for _, item := range items {
 			var p produk.Produk
@@ -62,9 +64,7 @@ func (r *transactionRepository) CreateCheckout(ctx context.Context, trx *Trx, it
 				HargaKonsumen: p.HargaKonsumen,
 				Deskripsi:     p.Deskripsi,
 			}
-			if err := tx.Create(&logP).Error; err != nil {
-				return err
-			}
+			logs = append(logs, logP)
 
 			subTotal := p.HargaKonsumen * item.Kuantitas
 			grandTotal += subTotal
@@ -86,6 +86,13 @@ func (r *transactionRepository) CreateCheckout(ctx context.Context, trx *Trx, it
 			return err
 		}
 
+		// Save Logs (Bulk Insert to avoid N+1 Insert inside loop)
+		if len(logs) > 0 {
+			if err := tx.Create(&logs).Error; err != nil {
+				return err
+			}
+		}
+
 		// Save Details
 		if len(details) > 0 {
 			if err := tx.Create(&details).Error; err != nil {
@@ -101,6 +108,15 @@ func (r *transactionRepository) FindByUserID(ctx context.Context, userID string)
 	var trxs []Trx
 	err := r.db.WithContext(ctx).Where("id_user = ?", userID).Find(&trxs).Error
 	return trxs, err
+}
+
+func (r *transactionRepository) FindTrxByIDAndUserID(ctx context.Context, trxID, userID string) (*Trx, error) {
+	var trx Trx
+	err := r.db.WithContext(ctx).Where("id = ? AND id_user = ?", trxID, userID).First(&trx).Error
+	if err != nil {
+		return nil, err
+	}
+	return &trx, nil
 }
 
 func (r *transactionRepository) FindDetailsByTrxID(ctx context.Context, trxID string) ([]DetailTrx, error) {

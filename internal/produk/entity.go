@@ -14,6 +14,7 @@ type Produk struct {
 	Deskripsi     string    `gorm:"column:deskripsi;type:text"`
 	IdToko        string    `gorm:"column:id_toko;type:varchar(50);not null"`
 	IdCategory    string    `gorm:"column:id_category;type:varchar(50);not null"`
+	Fotos         []FotoProduk `gorm:"foreignKey:IdProduk"`
 	UpdatedAt     time.Time `gorm:"column:updated_at;autoUpdateTime"`
 	CreatedAt     time.Time `gorm:"column:created_at;autoCreateTime"`
 }
