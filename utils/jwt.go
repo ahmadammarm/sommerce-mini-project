@@ -11,7 +11,7 @@ import (
 func GenerateToken(userID string, isAdmin bool) (string, error) {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		secret = "sommerce-secret-key-default" // Fallback if env is missing
+		panic("JWT_SECRET environment variable is not set!")
 	}
 
 	claims := jwt.MapClaims{

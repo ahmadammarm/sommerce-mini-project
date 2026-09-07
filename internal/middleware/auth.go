@@ -13,7 +13,7 @@ import (
 func getJWTSecret() []byte {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		secret = "sommerce-secret-key"
+		panic("JWT_SECRET environment variable is not set!")
 	}
 	return []byte(secret)
 }
