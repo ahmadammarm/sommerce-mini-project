@@ -46,11 +46,13 @@ func NewRouter(
 
 	// --- Toko ---
 	stores := api.Group("/toko")
-	stores.Get("/:id", tokoHandler.GetTokoByID)
-
 	storesProtected := stores.Group("/", middleware.Protected())
+	
+	// Define /me BEFORE /:id so it doesn't get trapped by the wildcard
 	storesProtected.Get("/me", tokoHandler.GetMyToko)
 	storesProtected.Put("/me", tokoHandler.UpdateMyToko)
+
+	stores.Get("/:id", tokoHandler.GetTokoByID)
 
 	// --- Alamat ---
 	alamats := api.Group("/alamat", middleware.Protected())

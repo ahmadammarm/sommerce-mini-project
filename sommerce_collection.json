@@ -1,0 +1,383 @@
+{
+  "info": {
+    "name": "Sommerce API",
+    "description": "Dokumentasi API komprehensif untuk aplikasi E-Commerce Sommerce. \n\nSemua request secara otomatis menggunakan token otentikasi (kecuali Register dan Login). **Pastikan Anda menjalankan endpoint Login terlebih dahulu** agar variabel token terisi otomatis.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"Ahmad Ammar\",\n  \"email\": \"ahmad@example.com\",\n  \"kata_sandi\": \"rahasia123\",\n  \"notelp\": \"08123456789\",\n  \"tanggal_lahir\": \"2003-06-16\",\n  \"jenis_kelamin\": \"Laki-laki\",\n  \"tentang\": \"Saya suka ngoding\",\n  \"pekerjaan\": \"Backend Engineer\",\n  \"id_provinsi\": \"35\",\n  \"id_kota\": \"35.73\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Mendaftar akun baru. Provinsi dan Kota akan divalidasi ke API Emsifa. Toko kosong akan otomatis terbuat."
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (pm.response.code === 200 && jsonData.data && jsonData.data.token) {",
+                  "    pm.collectionVariables.set(\"token\", jsonData.data.token);",
+                  "    console.log(\"Token berhasil di-update!\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ahmad@example.com\",\n  \"kata_sandi\": \"rahasia123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Mendapatkan JWT Token. Setelah sukses, token akan otomatis tersimpan di Variables."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. User",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["users", "me"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"Ahmad Ammar Updated\",\n  \"pekerjaan\": \"Backend Engineer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["users", "me"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Toko",
+      "item": [
+        {
+          "name": "Get My Toko",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/toko/me",
+              "host": ["{{base_url}}"],
+              "path": ["toko", "me"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Toko",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_toko\": \"Toko Serba Ada\",\n  \"url_foto\": \"https://example.com/foto.png\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/toko/me",
+              "host": ["{{base_url}}"],
+              "path": ["toko", "me"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Toko By ID (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/toko/:id",
+              "host": ["{{base_url}}"],
+              "path": ["toko", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "masukkan-id-toko"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Alamat",
+      "item": [
+        {
+          "name": "Create Alamat",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"judul_alamat\": \"Rumah Utama\",\n  \"nama_penerima\": \"Ahmad Ammar\",\n  \"no_telp\": \"08123456789\",\n  \"detail_alamat\": \"Jl. Jombang Raya No 4\",\n  \"id_provinsi\": \"35\",\n  \"id_kota\": \"35.73\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/alamat",
+              "host": ["{{base_url}}"],
+              "path": ["alamat"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Alamat",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/alamat",
+              "host": ["{{base_url}}"],
+              "path": ["alamat"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Category",
+      "item": [
+        {
+          "name": "Create Category (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_category\": \"Elektronik\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/categories",
+              "host": ["{{base_url}}"],
+              "path": ["categories"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/categories",
+              "host": ["{{base_url}}"],
+              "path": ["categories"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "6. Produk",
+      "item": [
+        {
+          "name": "Create Produk",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_produk\": \"Laptop Super\",\n  \"slug\": \"laptop-super\",\n  \"harga_reseller\": \"10000000\",\n  \"harga_konsumen\": \"12000000\",\n  \"stok\": 10,\n  \"deskripsi\": \"Laptop super kencang.\",\n  \"id_category\": \"masukkan-id-category\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/produk",
+              "host": ["{{base_url}}"],
+              "path": ["produk"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Produk (Public)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/produk?limit=10&page=1",
+              "host": ["{{base_url}}"],
+              "path": ["produk"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "7. Transaction",
+      "item": [
+        {
+          "name": "Checkout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Idempotency-Key",
+                "value": "{{$guid}}",
+                "description": "Auto-generate UUID to bypass idempotency lock",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method_bayar\": \"BCA Virtual Account\",\n  \"alamat_pengiriman\": \"masukkan-id-alamat\",\n  \"items\": [\n    {\n      \"id_produk\": \"masukkan-id-produk\",\n      \"kuantitas\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/transactions/checkout",
+              "host": ["{{base_url}}"],
+              "path": ["transactions", "checkout"]
+            },
+            "description": "Lakukan checkout. X-Idempotency-Key akan otomatis berganti setiap request."
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Transactions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/transactions",
+              "host": ["{{base_url}}"],
+              "path": ["transactions"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
